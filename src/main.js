@@ -111,37 +111,52 @@ class NgramScraper {
 		}
 	}
 
-	async processAllWords(words, yearStart, yearEnd, batchSize = 12) {
-		const batches = [];
-		for (let i = 0; i < words.length; i += batchSize) {
-			batches.push(words.slice(i, i + batchSize));
-		}
+	async processAllWords(words, yearStart, yearEnd, batchSize) {
+		const MAX_RETRIES = 5;
+		const BASE_DELAY = 2000;
+		const store = await Actor.openKeyValueStore("default");
 
-		const startTime = new Date();
-		let successfulBatches = 0;
+		let lastProcessedIndex = (await store.getValue("lastProcessedIndex")) || 0;
+		console.log(`Starting from index: ${lastProcessedIndex}`);
 
-		for (let i = 0; i < batches.length; i++) {
-			try {
-				await this.processBatch(batches[i], yearStart, yearEnd);
-				successfulBatches++;
+		for (let i = lastProcessedIndex; i < words.length; i += batchSize) {
+			const batch = words.slice(i, i + batchSize);
+			let retries = 0;
+			let delay = BASE_DELAY;
+			const jitter = () => Math.random() * 1000;
+			let success = false;
 
-				if (i < batches.length - 1) {
-					await new Promise((resolve) => setTimeout(resolve, 2000));
+			while (!success && retries < MAX_RETRIES) {
+				try {
+					const result = await this.processBatch(batch, yearStart, yearEnd);
+					await Actor.pushData({
+						...result,
+						processedIndex: i + batch.length,
+						totalWords: words.length,
+					});
+
+					await store.setValue("lastProcessedIndex", i + batch.length);
+					console.log(`Processed ${i + batch.length}/${words.length} words`);
+					success = true;
+				} catch (error) {
+					retries++;
+					console.error(`Retry ${retries}/${MAX_RETRIES}: ${error.message}`);
+
+					if (retries === MAX_RETRIES) {
+						throw new Error(`Failed processing words: ${batch.join(", ")}`);
+					}
+
+					delay = BASE_DELAY * Math.pow(2, retries) + jitter();
+					await new Promise((resolve) => setTimeout(resolve, delay));
 				}
-			} catch (error) {
-				console.error(`Batch ${i + 1} failed:`, error);
-				continue;
+			}
+
+			if (i + batchSize < words.length) {
+				await new Promise((resolve) =>
+					setTimeout(resolve, BASE_DELAY + Math.random() * 3000)
+				);
 			}
 		}
-
-		const endTime = new Date();
-		const duration = (endTime - startTime) / 1000;
-
-		console.log(
-			`Completed: ${successfulBatches}/${
-				batches.length
-			} batches in ${duration.toFixed(2)}s`
-		);
 	}
 }
 
@@ -161,8 +176,8 @@ async function main() {
 			throw new Error("Input must contain a non-empty array of words");
 		}
 
-		if (batchSize < 1 || batchSize > 20) {
-			throw new Error("Batch size must be between 1 and 20");
+		if (batchSize < 1 || batchSize > 12) {
+			throw new Error("Batch size must be between 1 and 12");
 		}
 
 		const scraper = new NgramScraper();
@@ -171,6 +186,12 @@ async function main() {
 		console.error("Actor failed:", error);
 		throw error;
 	} finally {
+		const store = await Actor.openKeyValueStore("default");
+		const progress = await store.getValue("lastProcessed");
+		const dataset = await Actor.openDataset("default");
+		console.log("Progress:", progress);
+		const { items } = await dataset.getData();
+		console.log("Results:", items);
 		await Actor.exit();
 	}
 }
