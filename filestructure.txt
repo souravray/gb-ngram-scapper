@@ -1,0 +1,10 @@
+ngram-scraper/
+├── .actor/
+│   └── actor.json           # Dataset schema
+├── src/
+│   └── main.js             # Main actor code
+├── .gitignore              # Git ignore file
+├── Dockerfile              # Docker configuration
+├── INPUT_SCHEMA.json       # Input schema
+├── package.json            # Dependencies
+└── README.md              # Documentation

@@ -1,0 +1,27 @@
+{
+	"title": "Google Ngram Scraper",
+	"description": "Scrape word frequency data from Google Ngrams",
+	"type": "object",
+	"schemaVersion": 1,
+	"properties": {
+		"words": {
+			"title": "Words to search",
+			"type": "array",
+			"description": "List of words to get frequency data for",
+			"editor": "stringList"
+		},
+		"yearStart": {
+			"title": "Start Year",
+			"type": "integer",
+			"description": "Start year for the search (default: 2021)",
+			"default": 2021
+		},
+		"yearEnd": {
+			"title": "End Year",
+			"type": "integer",
+			"description": "End year for the search (default: 2022)",
+			"default": 2022
+		}
+	},
+	"required": ["words"]
+}

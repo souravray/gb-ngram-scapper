@@ -1,0 +1,39 @@
+{
+	"actorSpecification": 1,
+	"name": "gb-ngram-sracper",
+	"version": "1.0.0",
+	"storages": {
+		"dataset": {
+			"actorSpecification": 1,
+			"views": {
+				"overview": {
+					"title": "Word Frequencies",
+					"description": "Google Ngram frequency results",
+					"transformation": {
+						"fields": ["word_freq[].word", "word_freq[].freq", "year"]
+					},
+					"display": {
+						"component": "table",
+						"columns": [
+							{
+								"label": "Word",
+								"field": "word_freq[].word",
+								"format": "text"
+							},
+							{
+								"label": "Frequency (%)",
+								"field": "word_freq[].freq",
+								"format": "number"
+							},
+							{
+								"label": "Year",
+								"field": "year",
+								"format": "text"
+							}
+						]
+					}
+				}
+			}
+		}
+	}
+}

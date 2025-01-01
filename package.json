@@ -1,15 +1,13 @@
 {
 	"name": "gb-ngram-sracper",
 	"version": "1.0.0",
-	"main": "index.js",
+	"main": "src/main.js",
 	"type": "module",
-	"scripts": {
-		"test": "echo \"Error: no test specified\" && exit 1"
-	},
-	"keywords": [],
-	"author": "",
-	"description": "",
 	"dependencies": {
+		"apify": "^3.1.8",
 		"node-fetch": "^3.3.2"
+	},
+	"scripts": {
+		"start": "node src/main.js"
 	}
 }
