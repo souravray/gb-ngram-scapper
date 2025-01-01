@@ -49,3 +49,5 @@ build/Release
 node_modules
 apify_storage
 storage
+input.json
+ngram_results.json
